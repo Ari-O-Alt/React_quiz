@@ -2,6 +2,7 @@ import React from 'react';
 import './App.css';
 import Quiz from './components/Quiz/Quiz';
 import QuizQuestions, { AnswerType } from './components/Api/QuizQuestions';
+import Result from './components/Result/Result';
 
 interface IAnswersCount {
   nintendo: number;
@@ -63,11 +64,11 @@ const App: React.FC = () => {
     result: '',
   }); */
 
+  const [question, setQuestion] = React.useState<string>('');
   const [counter, setCounter] = React.useState<number>(0);
   const [questionId, setQuestionId] = React.useState<number>(1);
-  const [question, setQuestion] = React.useState<string>('');
-  const [answerOptions, setAnswerOptions] = React.useState<AnswerType[]>([]);
   const [answer, setAnswer] = React.useState<string>('');
+  const [answerOptions, setAnswerOptions] = React.useState<AnswerType[]>([]);
   const [answersCount, setAnswersCount] = React.useState<IAnswersCount>({
     nintendo: 0,
     microsoft: 0,
@@ -79,22 +80,17 @@ const App: React.FC = () => {
     const shuffledAnswerOptions: AnswerType[][] = QuizQuestions.map(
       (question) => shuffleArray(question.answers)
     );
-    /* setState({
-      ...state,
-      question: QuizQuestions[0].question,
-      answerOptions: shuffledAnswerOptions[0],
-    }); */
     setQuestion(QuizQuestions[0].question);
     setAnswerOptions(shuffledAnswerOptions[0]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /*  console.log(state); */
-
   const setUserAnswer = (answer: string): void => {
     // create function that updates the property of an object based on the previous value
     const updatedAnswersCount = updatePropery(answersCount, answer);
-    /*  setState({ ...state, answersCount: updatedAnswersCount, answer: answer }); */
+
+    // [TO DO] update answersCount correctly using the answer
+    // display the Result component only when all questions are answered
     setAnswer(answer);
     setAnswersCount(updatedAnswersCount);
   };
@@ -116,26 +112,53 @@ const App: React.FC = () => {
     }); */
   };
 
-  const handleAnswerSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setUserAnswer(event.currentTarget.value);
-    if (questionId < QuizQuestions.length) {
-      setTimeout(() => setNextQuestion(), 300);
+  const getResults = (): string[] => {
+    // we het the answers count {nintendo: ?,microsoft: ?, sony: ?,}
+    const _answersCount = answersCount;
+    // we extract the keys
+    const answersCountKeys = Object.keys(_answersCount);
+    // we return all the values inside of _answersCount based in the keys
+    const answersCountValues = answersCountKeys.map(
+      (key) => _answersCount[key as keyof IAnswersCount]
+    );
+    // we find the biggest number in the array
+    const maxAnswerCount = Math.max.apply(null, answersCountValues);
+    // we find the key with the value equal to maxAnswerCount
+    return answersCountKeys.filter(
+      (key) => _answersCount[key as keyof IAnswersCount] === maxAnswerCount
+    );
+  };
+
+  const setResults = (results: string[]) => {
+    if (results.length === 1) {
+      setResult(results[0]);
     } else {
-      // do nothing for now
+      setResult('Undetermined');
+    }
+  };
+
+  const handleAnswerSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setUserAnswer(event.currentTarget.value); // we set the answer to the state
+    if (questionId < QuizQuestions.length) {
+      // if questionId is smaller than 4
+      setTimeout(() => setNextQuestion(), 300); // set next question
+    } else {
+      setTimeout(() => setResults(getResults()), 300); // if not prepare the results to be displayed on the page
     }
   };
 
   return (
     <div className='App'>
       <Quiz
-        answerOptions={answerOptions}
-        answer={answer}
-        counter={counter}
         question={question}
         questionId={questionId}
         questionTotal={QuizQuestions.length}
+        answer={answer}
+        answerOptions={answerOptions}
+        counter={counter}
         onAnswerSelected={handleAnswerSelected}
       />
+      <Result result={result} />
     </div>
   );
 };

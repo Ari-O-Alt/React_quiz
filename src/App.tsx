@@ -3,67 +3,28 @@ import './App.css';
 import Quiz from './components/Quiz/Quiz';
 import QuizQuestions, { AnswerType } from './components/Api/QuizQuestions';
 import Result from './components/Result/Result';
-
-interface IAnswersCount {
-  nintendo: number;
-  microsoft: number;
-  sony: number;
-}
-
-/* interface IState {
-  counter: number;
-  questionId: number;
-  question: string;
-  answerOptions: AnswerType[];
-  answer: string;
-  answersCount: IAnswersCount;
-  result: string;
-} */
-
-const updatePropery = (
-  object: IAnswersCount,
-  property: string
-): IAnswersCount => {
-  const valueToUpdate = object[property as keyof IAnswersCount];
-  const newValue = valueToUpdate + 1;
-  const newObject = { ...object, [valueToUpdate]: newValue };
-
-  return newObject;
-};
+import { IAnswersCount } from './BusinessLogic/Interfaces';
+import Functions from './BusinessLogic/Functions';
 
 const shuffleArray = (array: AnswerType[]): AnswerType[] => {
   let currentIndex: number = array.length,
     temporaryValue,
     randomIndex;
-  // While there remain elements to shuffle...
   while (0 !== currentIndex) {
-    // Pick a remaining element...
-    randomIndex = Math.floor(Math.random() * currentIndex);
+    // While there remain elements to shuffle...
+    randomIndex = Math.floor(Math.random() * currentIndex); // Pick a remaining element...
     currentIndex -= 1;
-    // And swap it with the current element.
-    temporaryValue = array[currentIndex];
+    temporaryValue = array[currentIndex]; // And swap it with the current element.
     array[currentIndex] = array[randomIndex];
     array[randomIndex] = temporaryValue;
   }
   return array;
 };
 
-// [TO DO] break state
 const App: React.FC = () => {
-  /* const [state, setState] = React.useState<IState>({
-    counter: 0,
-    questionId: 1,
-    question: '',
-    answerOptions: [],
-    answer: '',
-    answersCount: {
-      nintendo: 0,
-      microsoft: 0,
-      sony: 0,
-    },
-    result: '',
-  }); */
-
+  /**
+   * All states the App component holds
+   */
   const [question, setQuestion] = React.useState<string>('');
   const [counter, setCounter] = React.useState<number>(0);
   const [questionId, setQuestionId] = React.useState<number>(1);
@@ -76,6 +37,9 @@ const App: React.FC = () => {
   });
   const [result, setResult] = React.useState<string>('');
 
+  /**
+   * Sets the state once using the data source in the API folder
+   */
   React.useEffect(() => {
     const shuffledAnswerOptions: AnswerType[][] = QuizQuestions.map(
       (question) => shuffleArray(question.answers)
@@ -86,8 +50,7 @@ const App: React.FC = () => {
   }, []);
 
   const setUserAnswer = (answer: string): void => {
-    // create function that updates the property of an object based on the previous value
-    const updatedAnswersCount = updatePropery(answersCount, answer);
+    const updatedAnswersCount = Functions.updatePropery(answersCount, answer);
 
     // [TO DO] update answersCount correctly using the answer
     // display the Result component only when all questions are answered
@@ -95,7 +58,10 @@ const App: React.FC = () => {
     setAnswersCount(updatedAnswersCount);
   };
 
-  const setNextQuestion = () => {
+  /**
+   * Sets the next question after the user has selected an answer fot the current question
+   */
+  const setNextQuestion = (): void => {
     const newCounter = counter + 1;
     const newQuestionId = questionId + 1;
     setCounter(newCounter);
@@ -103,40 +69,40 @@ const App: React.FC = () => {
     setQuestion(QuizQuestions[newCounter].question);
     setAnswerOptions(QuizQuestions[newCounter].answers);
     setAnswer('');
-    /*  this.setState({
-      counter: counter,
-      questionId: questionId,
-      question: quizQuestions[counter].question,
-      answerOptions: quizQuestions[counter].answers,
-      answer: ''
-    }); */
   };
 
+  /**
+   * Gets the result based on the answer count with the biggest value
+   */
   const getResults = (): string[] => {
-    // we het the answers count {nintendo: ?,microsoft: ?, sony: ?,}
-    const _answersCount = answersCount;
-    // we extract the keys
-    const answersCountKeys = Object.keys(_answersCount);
-    // we return all the values inside of _answersCount based in the keys
+    const _answersCount = answersCount; // we get the answers count {nintendo: ?,microsoft: ?, sony: ?,}
+    const answersCountKeys = Object.keys(_answersCount); // we extract the keys of the object
     const answersCountValues = answersCountKeys.map(
+      // we return all the values inside of _answersCount based on the keys; returns an array of numbers
       (key) => _answersCount[key as keyof IAnswersCount]
     );
-    // we find the biggest number in the array
-    const maxAnswerCount = Math.max.apply(null, answersCountValues);
-    // we find the key with the value equal to maxAnswerCount
+    const maxAnswerCount = Math.max.apply(null, answersCountValues); // we find the biggest number in the array
     return answersCountKeys.filter(
+      // we find the key with the value equal to maxAnswerCount and return the value (it will be an array with 1 item)
       (key) => _answersCount[key as keyof IAnswersCount] === maxAnswerCount
     );
   };
 
+  /**
+   * Sets the result to the state
+   */
   const setResults = (results: string[]) => {
     if (results.length === 1) {
+      // if the array has one item, set it to the state
       setResult(results[0]);
     } else {
-      setResult('Undetermined');
+      setResult('Undetermined'); // else, set 'Undetermined' to the state
     }
   };
 
+  /**
+   * Handles answer selection
+   */
   const handleAnswerSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUserAnswer(event.currentTarget.value); // we set the answer to the state
     if (questionId < QuizQuestions.length) {

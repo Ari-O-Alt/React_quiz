@@ -5,7 +5,7 @@ interface IAnswerOptionsProps {
   answerContent: string;
   answer: string;
   questionId: number;
-  onAnswerSelected: () => void;
+  onAnswerSelected: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 const AnswerOption: React.FC<IAnswerOptionsProps> = (props) => {
   const { answerType, answerContent, answer, onAnswerSelected } = props;

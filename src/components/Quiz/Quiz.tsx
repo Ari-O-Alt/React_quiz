@@ -15,7 +15,7 @@ interface IQuizProps {
   question: string;
   questionId: number;
   questionTotal: number;
-  onAnswerSelected: () => void;
+  onAnswerSelected: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const Quiz: React.FC<IQuizProps> = (props) => {
